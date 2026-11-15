@@ -130,3 +130,28 @@ def test_real_dataset_split():
     assert train_times.isdisjoint(validation_times)
     assert train_times.isdisjoint(test_times)
     assert validation_times.isdisjoint(test_times)
+
+def test_calendar_features():
+    from features import build_calendar_features
+
+    df = pd.DataFrame({
+        "timestamp": pd.to_datetime([
+            "2012-08-01 08:00",
+            "2012-08-04 23:00",
+            "2012-08-05 09:00",
+        ]),
+        "holiday": [0, 0, 0],
+        "workingday": [1, 0, 0],
+    })
+
+    result = build_calendar_features(df)
+
+    assert list(result.columns) == [
+        "hour", "weekday", "month",
+        "holiday", "workingday",
+    ]
+
+    assert result["hour"].tolist() == [8, 23, 9]
+    assert result["weekday"].tolist() == [3, 6, 0]
+    assert result["month"].tolist() == [8, 8, 8]
+    assert result["workingday"].tolist() == [1, 0, 0]
