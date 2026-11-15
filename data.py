@@ -168,6 +168,32 @@ def audit_by_period(df):
     return pd.DataFrame(rows)
 
 
+def split_by_period(df):
+    """Split observations into chronological periods."""
+    if "timestamp" not in df.columns:
+        raise ValueError("Missing timestamp column")
+
+    result = df.copy()
+    result["timestamp"] = pd.to_datetime(result["timestamp"])
+
+    train_end = pd.Timestamp("2012-05-01")
+    validation_end = pd.Timestamp("2012-08-01")
+    test_end = pd.Timestamp("2013-01-01")
+
+    train = result[result["timestamp"] < train_end].copy()
+
+    validation = result[
+        (result["timestamp"] >= train_end)
+        & (result["timestamp"] < validation_end)
+    ].copy()
+
+    test = result[
+        (result["timestamp"] >= validation_end)
+        & (result["timestamp"] < test_end)
+    ].copy()
+
+    return train, validation, test
+
 if __name__ == "__main__":
     df = load_hourly_data()
     df = add_timestamp(df)
