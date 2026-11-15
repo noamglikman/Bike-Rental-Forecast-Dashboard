@@ -1,0 +1,2 @@
+observed_rows,expected_hours,missing_hours,duplicate_timestamps,invalid_targets,zero_rental_hours
+17379,17544,165,0,0,0
