@@ -83,3 +83,50 @@ def test_period_audit_totals():
     assert audit["missing_hours"].sum() == 165
     assert audit["duplicate_timestamps"].sum() == 0
     assert audit["invalid_targets"].sum() == 0
+
+def test_chronological_split():
+    from data import split_by_period
+
+    df = pd.DataFrame({
+        "timestamp": pd.to_datetime([
+            "2011-01-01 00:00",
+            "2012-04-30 23:00",
+            "2012-05-01 00:00",
+            "2012-07-31 23:00",
+            "2012-08-01 00:00",
+            "2012-12-31 23:00",
+        ]),
+        "cnt": [1, 2, 3, 4, 5, 6],
+    })
+
+    train, validation, test = split_by_period(df)
+
+    assert len(train) == 2
+    assert len(validation) == 2
+    assert len(test) == 2
+
+    assert train["timestamp"].max() < pd.Timestamp("2012-05-01")
+    assert validation["timestamp"].min() >= pd.Timestamp("2012-05-01")
+    assert validation["timestamp"].max() < pd.Timestamp("2012-08-01")
+    assert test["timestamp"].min() >= pd.Timestamp("2012-08-01")
+
+
+def test_real_dataset_split():
+    from data import (
+        load_hourly_data,
+        add_timestamp,
+        split_by_period,
+    )
+
+    df = add_timestamp(load_hourly_data())
+    train, validation, test = split_by_period(df)
+
+    assert len(train) + len(validation) + len(test) == len(df)
+
+    train_times = set(train["timestamp"])
+    validation_times = set(validation["timestamp"])
+    test_times = set(test["timestamp"])
+
+    assert train_times.isdisjoint(validation_times)
+    assert train_times.isdisjoint(test_times)
+    assert validation_times.isdisjoint(test_times)
