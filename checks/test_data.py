@@ -69,3 +69,17 @@ def test_audit_targets():
 
     assert result["invalid_targets"] == 3
     assert result["zero_rental_hours"] == 1
+
+def test_period_audit_totals():
+    from data import add_timestamp, audit_by_period, load_hourly_data
+
+    df = add_timestamp(load_hourly_data())
+    audit = audit_by_period(df)
+
+    assert list(audit["period"]) == [
+        "train", "validation", "test"
+    ]
+    assert audit["observed_rows"].sum() == 17379
+    assert audit["missing_hours"].sum() == 165
+    assert audit["duplicate_timestamps"].sum() == 0
+    assert audit["invalid_targets"].sum() == 0
